@@ -1,0 +1,156 @@
+
+<html>
+<head>
+    <script type="text/javascript"
+            src="http://www.airconsole.com/api/airconsole-1.2.js"></script>
+    <script type="text/javascript" src="view_manager.js"></script>
+    <script type="text/javascript">
+    navigator.vibrate = (navigator.vibrate ||
+                         navigator.webkitVibrate ||
+                         navigator.mozVibrate ||
+                         navigator.msVibrate);
+
+    var airconsole;
+
+    var _leftIsUp = true;
+    var _rightIsUp = true;
+    var _direction = 0;
+    /**
+     * Sets up the communication to the screen.
+     */
+    function init() {
+      airconsole = new AirConsole({ "orientation": "landscape" });
+      ViewManager.init();
+      ViewManager.show("view_ingame");
+      airconsole.onMessage = function(from, data) {
+        if (from == AirConsole.SCREEN && data.vibrate) {
+          navigator.vibrate(data.vibrate);
+          console.log("Vibrating: " + data.vibrate);
+        }
+        else if (data.view) {
+            ViewManager.show(data.view);
+        }
+      }
+      airconsole.onReady = function(code) {
+        var div = document.getElementById("player_id");
+        div.innerHTML = "You are Player " + airconsole.device_id;
+        ViewManager.show("view_start");
+        //if (airconsole.device_id == 1) {
+        //    ViewManager.show("view_start");
+        //}
+        //else {
+        //    ViewManager.show("view_ingame");
+        //}
+      }
+    }
+
+    /**
+     * Tells the screen to move the paddle of this player.
+     * @param amount
+     */
+    function move(amount) {
+      airconsole.message(AirConsole.SCREEN, {move: amount})
+    }
+
+    function leftButtonChanged(isUp) {
+        _leftIsUp = isUp;
+        _direction = (_leftIsUp ? 0 : -1) + (_rightIsUp ? 0 : 1);
+        var direction = _direction;
+        airconsole.message(AirConsole.SCREEN, { setDirection: direction });
+    }
+
+    function rightButtonChanged(isUp) {
+        _rightIsUp = isUp;
+        _direction = (_leftIsUp ? 0 : -1) + (_rightIsUp ? 0 : 1);
+        var direction = _direction;
+        airconsole.message(AirConsole.SCREEN, { setDirection: direction });
+    }
+
+    function menuItemSelected(isPlayMode) {
+        var message = {
+            'action': 'selectMode',
+            'info': { 'isPlayMode': isPlayMode }
+        };
+        airconsole.message(AirConsole.SCREEN, message);
+    }
+
+
+    </script>
+    <style type="text/css">
+        @font-face {
+            font-family: 'Arial';
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0px;
+            font-family: 'PressStart2P', sans-serif;
+            color: white;
+            text-align: center;
+            background-color: black;
+        }
+
+/*        .button {
+            display: inline-block;
+            height: 45%;
+            width: 98%;
+            background-color: #222;
+            position: relative;
+        }*/
+
+        .button {
+            display: inline-block;
+            height: 98%;
+            width: 49%;
+            background-color: #222;
+            position: relative;
+        }
+
+        .button_label {
+            position: absolute;
+            left: 0px;
+            width: 100%;
+            top: 50%;
+            margin-top: -6px;
+        }
+
+        #player_id {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            width: 100%;
+            margin-top: -8px;
+            color: #777;
+        }
+    </style>
+</head>
+<!--<body onload="init()">-->
+<body onload="window.app = new init()">    
+    
+    <!--<div style="width: 1%"></div>-->
+
+    <!--<div id="player_id"></div>-->
+    
+
+    <div id="view_ingame" class="view">    
+        <!--Your content here-->
+        <span class=button ontouchstart="leftButtonChanged(false)" ontouchend="leftButtonChanged(true)" onmousedown="leftButtonChanged(false)" onmouseup="leftButtonChanged(true)">
+            <div class="button_label">Left</div>
+        </span>
+        <!--<div style="width: 8%"></div>-->
+        <span class=button ontouchstart="rightButtonChanged(false)" ontouchend="rightButtonChanged(true)" onmousedown="rightButtonChanged(false)" onmouseup="rightButtonChanged(true)">
+            <div class="button_label">Right</div>
+        </span>
+    </div> 
+    <div id="view_start" class="view">    
+        <!--Your other content here-->
+        <span class=button ontouchstart="menuItemSelected(true)" onmousedown="menuItemSelected(true)">
+            <div class="button_label">Play</div>
+        </span>
+        <!--<div style="width: 8%"></div>-->
+        <span class=button ontouchstart="menuItemSelected(false)" onmousedown="menuItemSelected(false)">
+            <div class="button_label">Party Mode</div>
+        </span>
+    </div>
+</body>
+</html>
